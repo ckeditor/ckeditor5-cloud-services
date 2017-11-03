@@ -12,6 +12,7 @@ import TokenMock from './_utils/tokenmock';
 const Token = CloudServices.Token;
 
 describe( 'CloudServices', () => {
+	const sandbox = sinon.sandbox.create();
 	let element;
 
 	beforeEach( () => {
@@ -23,6 +24,11 @@ describe( 'CloudServices', () => {
 	afterEach( () => {
 		CloudServices.Token = Token;
 		document.body.removeChild( element );
+		sandbox.restore();
+	} );
+
+	it( 'should have `CloudServices` plugin name', () => {
+		expect( CloudServices.pluginName ).to.equal( 'CloudServices' );
 	} );
 
 	describe( 'init()', () => {
@@ -36,11 +42,11 @@ describe( 'CloudServices', () => {
 					}
 				} )
 				.then( editor => {
-					const cloudServicesPlugin = editor.plugins.get( CloudServices );
+					const cloudServices = editor.plugins.get( CloudServices );
 
-					expect( cloudServicesPlugin ).to.be.instanceOf( CloudServices );
-					expect( cloudServicesPlugin.tokenUrl ).to.equal( 'http://token-endpoint' );
-					expect( cloudServicesPlugin.additionalOption ).to.equal( 'some-value' );
+					expect( cloudServices ).to.be.instanceOf( CloudServices );
+					expect( cloudServices.tokenUrl ).to.equal( 'http://token-endpoint' );
+					expect( cloudServices.additionalOption ).to.equal( 'some-value' );
 
 					return editor.destroy();
 				} );
@@ -59,9 +65,9 @@ describe( 'CloudServices', () => {
 					plugins: [ CloudServices ]
 				} )
 				.then( editor => {
-					const cloudServicesPlugin = editor.plugins.get( CloudServices );
+					const cloudServices = editor.plugins.get( CloudServices );
 
-					expect( cloudServicesPlugin.uploadUrl ).to.equal( 'https://files.cke-cs.com/upload/' );
+					expect( cloudServices.uploadUrl ).to.equal( 'https://files.cke-cs.com/upload/' );
 				} );
 		} );
 
@@ -74,9 +80,9 @@ describe( 'CloudServices', () => {
 					}
 				} )
 				.then( editor => {
-					const cloudServicesPlugin = editor.plugins.get( CloudServices );
+					const cloudServices = editor.plugins.get( CloudServices );
 
-					expect( cloudServicesPlugin.uploadUrl ).to.equal( 'https://some-upload-url/' );
+					expect( cloudServices.uploadUrl ).to.equal( 'https://some-upload-url/' );
 				} );
 		} );
 
@@ -91,9 +97,9 @@ describe( 'CloudServices', () => {
 					}
 				} )
 				.then( editor => {
-					const cloudServicesPlugin = editor.plugins.get( CloudServices );
+					const cloudServices = editor.plugins.get( CloudServices );
 
-					expect( cloudServicesPlugin.token.value ).to.equal( 'initial-token' );
+					expect( cloudServices.token.value ).to.equal( 'initial-token' );
 
 					return editor.destroy();
 				} );
@@ -108,9 +114,29 @@ describe( 'CloudServices', () => {
 					cloudServices: {}
 				} )
 				.then( editor => {
-					const cloudServicesPlugin = editor.plugins.get( CloudServices );
+					const cloudServices = editor.plugins.get( CloudServices );
 
-					expect( cloudServicesPlugin.token ).to.equal( null );
+					expect( cloudServices.token ).to.equal( null );
+				} );
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should stop listening on the token change', () => {
+			return ClassicTestEditor
+				.create( element, {
+					plugins: [ CloudServices ],
+					cloudServices: {
+						tokenUrl: 'http://token-endpoint',
+					}
+				} )
+				.then( editor => {
+					const cloudServices = editor.plugins.get( CloudServices );
+					const stub = sandbox.stub( cloudServices.token, '_stopRefreshing' );
+					cloudServices.destroy();
+
+					expect( cloudServices.token ).to.be.null;
+					expect( stub.calledOnce ).to.be.true;
 				} );
 		} );
 	} );

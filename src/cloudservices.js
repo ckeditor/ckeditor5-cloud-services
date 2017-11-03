@@ -19,6 +19,13 @@ export default class CloudServices extends Plugin {
 	/**
 	 * @inheritDoc
 	 */
+	static get pluginName() {
+		return 'CloudServices';
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	init() {
 		const editor = this.editor;
 		const config = editor.config;
@@ -65,6 +72,11 @@ export default class CloudServices extends Plugin {
 		this.token = new CloudServices.Token( this.tokenUrl );
 
 		return this.token.init();
+	}
+
+	destroy() {
+		this.token._stopRefreshing();
+		this.token = null;
 	}
 }
 
